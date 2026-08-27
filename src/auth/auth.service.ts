@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -190,7 +191,58 @@ export class AuthService {
         isVerified: true,
         passwordHash,
       },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isVerified: true,
+        isActive: true,
+      },
     });
+  }
+
+  async findAllPanitia() {
+    return this.prisma.account.findMany({
+      where: { role: 'PANITIA' },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isVerified: true,
+        isActive: true,
+      },
+    });
+  }
+
+  async updatePanitiaStatus(id: string, isActive: boolean) {
+    const account = await this.prisma.account.findFirst({
+      where: { id, role: 'PANITIA' },
+    });
+    if (!account) {
+      throw new NotFoundException('Akun panitia tidak ditemukan');
+    }
+
+    return this.prisma.account.update({
+      where: { id },
+      data: { isActive },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isActive: true,
+      },
+    });
+  }
+
+  async deletePanitia(id: string) {
+    const account = await this.prisma.account.findFirst({
+      where: { id, role: 'PANITIA' },
+    });
+    if (!account) {
+      throw new NotFoundException('Akun panitia tidak ditemukan');
+    }
+
+    await this.prisma.account.delete({ where: { id } });
   }
 
   /**

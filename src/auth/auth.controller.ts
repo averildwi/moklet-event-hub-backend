@@ -2,7 +2,10 @@ import type { JwtPayload } from './interfaces/jwt-payload.interface';
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  Param,
+  Patch,
   Post,
   UseGuards,
   HttpCode,
@@ -26,6 +29,7 @@ import { RequestOtpDto } from './dto/request-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { BindIdentityDto } from './dto/bind-identity.dto';
 import { CreatePanitiaDto } from './dto/create-panitia.dto';
+import { UpdatePanitiaStatusDto } from './dto/update-panitia-status.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { SetupPasswordDto } from './dto/setup-password.dto';
@@ -179,6 +183,47 @@ export class AuthController {
       created,
       'Akun panitia dibuat. Panitia bisa langsung login pakai email & password ini.',
     );
+  }
+
+  @Get('panitia')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN_KESISWAAN')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '[ADMIN_KESISWAAN] Ambil seluruh daftar akun panitia' })
+  @ApiOkResponse({ description: 'Daftar akun panitia.' })
+  async findAllPanitia() {
+    const panitiaList = await this.authService.findAllPanitia();
+    return new RawResponse(panitiaList);
+  }
+
+  @Patch('panitia/:id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN_KESISWAAN')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '[ADMIN_KESISWAAN] Aktifkan / non-aktifkan akun panitia' })
+  @ApiOkResponse({ description: 'Status akun panitia berhasil diubah.' })
+  @ApiResponse({ status: 404, description: 'Akun panitia tidak ditemukan.' })
+  async updatePanitiaStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdatePanitiaStatusDto,
+  ) {
+    const updated = await this.authService.updatePanitiaStatus(id, dto.isActive);
+    return new MessageResponse(
+      updated,
+      `Akun panitia berhasil ${dto.isActive ? 'diaktifkan' : 'dinonaktifkan'}`,
+    );
+  }
+
+  @Delete('panitia/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN_KESISWAAN')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '[ADMIN_KESISWAAN] Hapus akun panitia' })
+  @ApiOkResponse({ description: 'Akun panitia berhasil dihapus.' })
+  @ApiResponse({ status: 404, description: 'Akun panitia tidak ditemukan.' })
+  async deletePanitia(@Param('id') id: string) {
+    await this.authService.deletePanitia(id);
+    return new MessageResponse(null, 'Akun panitia berhasil dihapus');
   }
 
   @Get('me')

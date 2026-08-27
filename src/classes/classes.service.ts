@@ -45,6 +45,9 @@ export class ClassesService {
         skip,
         take: limit,
         orderBy: [{ grade: 'asc' }, { name: 'asc' }],
+        include: {
+          _count: { select: { students: true } },
+        },
       }),
       this.prisma.class.count(),
     ]);

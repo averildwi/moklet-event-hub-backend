@@ -75,6 +75,7 @@ model Account {
   passwordHash          String?
   role                  Role                   @default(SISWA)
   isVerified            Boolean                @default(false)
+  isActive              Boolean                @default(true)
   studentId             String?                @unique @db.Uuid
   student               Student?               @relation(fields: [studentId], references: [id], onDelete: SetNull)
   events                Event[]
